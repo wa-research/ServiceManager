@@ -4,3 +4,21 @@ obj
 
 # mstest test results
 TestResults
+
+*.pdb
+*.dll
+*.suo
+*.cache
+*.exe
+*.user
+*/bin/
+!/_lib/*.dll
+Thumbs.db
+.project
+.settings/
+*.pidb
+*.userprefs
+VersionInfo.cs
+.DS_Store
+/.idea
+/*/.idea
