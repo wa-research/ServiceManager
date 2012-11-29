@@ -8,8 +8,6 @@ namespace ServiceBroker
 	/// </summary>
 	public sealed class Logger 
 	{
-        static log4net.ILog _log = log4net.LogManager.GetLogger(typeof(Logger));
-
 		private Logger()	{}
 
         /// <summary>
@@ -18,7 +16,6 @@ namespace ServiceBroker
         /// <param name="ex"></param>
         internal static void LogException(Exception ex)
         {
-            _log.Error(ex);
         }
 
 		/// <summary>
@@ -29,7 +26,6 @@ namespace ServiceBroker
 		/// <param name="ex"></param>
 		public static void LogException(string message, Exception ex)
 		{
-            _log.Error(message, ex);
 		}
 
         /// <summary>
@@ -38,7 +34,6 @@ namespace ServiceBroker
         /// <param name="message"></param>
         public static void Info(object message)
         {
-            _log.Info(message);
         }
 
         /// <summary>
@@ -48,7 +43,6 @@ namespace ServiceBroker
         /// <param name="format"></param>
         public static void Info(string format, params object[] args)
         {
-            _log.InfoFormat(format, args);
         }
 
         /// <summary>
@@ -57,7 +51,6 @@ namespace ServiceBroker
         /// <param name="message"></param>
         public static void Error(object message)
         {
-            _log.Error(message);
         }
 
         /// <summary>
@@ -67,7 +60,6 @@ namespace ServiceBroker
         /// <param name="format"></param>
         public static void Error(string format, params object[] args)
         {
-            _log.ErrorFormat(format, args);
         }
 
         /// <summary>
@@ -76,7 +68,6 @@ namespace ServiceBroker
         /// <param name="message"></param>
         public static void Debug(object message)
         {
-            _log.Debug(message);
         }
 
         /// <summary>
@@ -86,7 +77,6 @@ namespace ServiceBroker
         /// <param name="format"></param>
         public static void Debug(string format, params object[] args)
         {
-            _log.DebugFormat(format, args);
         }
 
 	}
