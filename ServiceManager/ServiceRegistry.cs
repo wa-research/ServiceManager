@@ -10,27 +10,23 @@ namespace ServiceManager
 {
     class ServiceRegistry
     {
-        #region Worker registry
+        #region Public interface
         private Dictionary<string, ServiceInfo> _services = new Dictionary<string, ServiceInfo>();
 
-        public ServiceInfo[] GetWorkers()
+        public ServiceInfo[] GetServices()
         {
             return _services.Values.ToArray();
         }
 
-        public ServiceInfo GetWorker(string id)
+        public ServiceInfo GetServiceInfo(string id)
         {
             if (_services.ContainsKey(id))
                 return _services[id];
             else
                 return null;
         }
-        #endregion
-        public ServiceRegistry()
-        {
-        }
 
-        public void DiscoverAndStartServices(string basePath, string mask)
+        public void DiscoverServices(string basePath, string mask)
         {
             if (basePath == null || !Directory.Exists(basePath))
                 throw new ArgumentException(string.Format("Invalid base path '{0}'", basePath ?? "<null>"));
@@ -39,6 +35,39 @@ namespace ServiceManager
                 LoadServicesInDirectory(d, mask);
             }
         }
+
+        public void StartServices()
+        {
+            
+            foreach (var s in _services.Values) {
+                s.Proxy.Start();
+            }
+        }
+
+        public void StopServices()
+        {
+            foreach (var s in _services.Values) {
+                StopService(s.Path);
+            }
+        }
+
+        public void StartService(string fullPath)
+        {
+            LoadAssembly(fullPath);
+            var service = _services.Values.Where(s => s.Path == fullPath).FirstOrDefault();
+            if (service != null) {
+                service.Proxy.Start();
+            }
+        }
+
+        public void StopService(string fullPath)
+        {
+            var service = _services.Values.Where(s => s.Path == fullPath).FirstOrDefault();
+            if (service != null) {
+                service.Proxy.Stop();
+            }
+        } 
+        #endregion
 
         private void LoadServicesInDirectory(string d, string dllMask)
         {
@@ -51,6 +80,9 @@ namespace ServiceManager
         private void LoadAssembly(string filePath)
         {
             string wkid = HashFolderPath(filePath);
+
+            if (!File.Exists(filePath))
+                return;
 
             if (CheckIfLoadedAndUpToDate(this._services, wkid))
                 return;
@@ -75,7 +107,7 @@ namespace ServiceManager
             //Inject proxy into appdomain
             ServiceProxy proxy = null;
             try {
-                //Inject our local copy into assembly so that we don't have to deploy duplicates of shared dependencies to every worker folder
+                //Inject our local copy into assembly so that we don't have to deploy duplicates of shared dependencies to every svc folder
                 //remoteDomain.Load(Assembly.GetAssembly(typeof(AsyncPipes.NamedPipeStreamClient)).GetName());
 
                 proxy = (ServiceProxy)remoteDomain.CreateInstanceFromAndUnwrap(Assembly.GetAssembly(typeof(ServiceProxy)).Location, typeof(ServiceProxy).FullName);
@@ -86,9 +118,9 @@ namespace ServiceManager
                 return;
             }
 
-            //Load worker into the domain
+            //Load svc into the domain
             try {
-                if (!proxy.LoadWorker(asmName.FullName)) {
+                if (!proxy.LoadService(asmName.FullName)) {
                     Console.WriteLine("Could not load any services from {0} (Most likely the assembly is missing an entry point)", asmName.FullName);
                     UnloadDomain(filePath, remoteDomain);
                     return;
@@ -102,39 +134,9 @@ namespace ServiceManager
                 }
                 return;
             }
-            _services.Add(wkid, new ServiceInfo { ID = wkid, Path = filePath, LastModified = File.GetLastWriteTime(filePath), Name = proxy.Name, Proxy = proxy });
+            _services.Add(wkid, new ServiceInfo { ID = wkid, Path = filePath, LastModified = File.GetLastWriteTime(filePath), Name = proxy.Name, Proxy = proxy, AppDomain = remoteDomain });
         }
 
-        public void StartServices()
-        {
-            foreach (var s in _services.Values) {
-                s.Proxy.Start();
-            }
-        }
-        public void StopServices()
-        {
-            foreach (var s in _services.Values) {
-                s.Proxy.Stop();
-            }
-        }
-
-        public void StartService(string fullPath)
-        {
-            var service = _services.Values.Where(s => s.Path == fullPath).FirstOrDefault();
-            if (service != null) {
-                service.Proxy.Start();
-            }
-        }
-
-        public void StopService(string fullPath)
-        {
-            var service = _services.Values.Where(s => s.Path == fullPath).FirstOrDefault();
-            if (service != null) {
-                service.Proxy.Stop();
-            }
-        } 
-
-        #region Create or unload a domain
         private AppDomain CreateRemoteDomain(string filePath, AssemblyName asmName)
         {
             string appBasePath = Path.GetDirectoryName(filePath);
@@ -157,17 +159,17 @@ namespace ServiceManager
             if (dictionary.ContainsKey(wkid)) {
                 var prx = dictionary[wkid];
 
-                string serviceName = dictionary[wkid].Name;
-                DateTime curTime = File.GetLastWriteTime(wkid);
+                string serviceName = prx.Name;
+                DateTime curTime = File.GetLastWriteTime(prx.Path);
 
                 // only add the service if it is not already running latest copy
                 if (curTime.Ticks <= prx.LastModified.Ticks) {
-                    //Log("Skipping '{0}' because it is already loaded.", prx.Name);
+                    Log("Skipping '{0}' because it is already loaded.", prx.Name);
                     return true;
                 } else {
                     // new copy, so stop current and clear out cache
                     // stop/unload service
-                    //Log("Unloading old version of service '{0}:{1}'; will load updated binaries.", serviceName, wkid);
+                    Log("Unloading old version of service '{0}:{1}'; will load updated binaries.", serviceName, wkid);
                     this.UnloadService(wkid);
                     dictionary.Remove(wkid);
                 }
@@ -175,19 +177,26 @@ namespace ServiceManager
             return false;
         }
 
-        private void UnloadService(string wkid)
+        private void Log(string p1, params object[] args)
         {
-            if (_services.ContainsKey(wkid)) {
-                ServiceInfo worker = _services[wkid];
+            Console.WriteLine(p1, args);
+        }
+
+        private void UnloadService(string id)
+        {
+            if (_services.ContainsKey(id)) {
+                ServiceInfo svc = _services[id];
 
                 try {
-                    worker.Proxy.Stop();
-                } catch { }
-
-                try {
-                    AppDomain.Unload(worker.AppDomain);
+                    svc.Proxy.Stop();
                 } catch (Exception ex) {
-                    //Log("Could not uload service {0}:{1} ({2})", worker.Name, wkid, ex.Message);
+                    Log("Error while stopping service {0} [{1}]: {2}", svc.Name, id, ex.Message);
+                }
+
+                try {
+                    AppDomain.Unload(svc.AppDomain);
+                } catch (Exception ex) {
+                    Log("Could not unload service {0} [{1}]: {2}", svc.Name, id, ex.Message);
                 }
             }
         }
@@ -197,10 +206,9 @@ namespace ServiceManager
             try {
                 AppDomain.Unload(domain);
             } catch (AppDomainUnloadedException ex) {
-                //Log("There was an error unloading domain at {0}: {1}", filePath, ex.Message);
+                Log("There was an error unloading domain at {0}: {1}", filePath, ex.Message);
             }
         }
-        #endregion
 
         #region Create service ID
         public static string HashFolderPath(string text)

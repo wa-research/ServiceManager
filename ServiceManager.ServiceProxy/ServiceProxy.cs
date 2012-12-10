@@ -10,27 +10,27 @@ namespace ServiceManager
         public const string STOP_METHOD = "StopService";
        
         public string Name { get; set; }
-        private object _worker;
+        private object _service;
         private MethodInfo _start, _stop;
 
         public void Start()
         {
             if (_start == null) {
-                _start = _worker.GetType().GetMethods().Where(m => m.Name == START_METHOD).FirstOrDefault();
+                _start = _service.GetType().GetMethods().Where(m => m.Name == START_METHOD).FirstOrDefault();
             }
             if (_start != null)
-                _start.Invoke(_worker, null);
+                _start.Invoke(_service, null);
         }
 
         public void Stop() 
         {
             if (_stop == null)
-                _stop = _worker.GetType().GetMethods().Where(m => m.Name == STOP_METHOD).FirstOrDefault();
+                _stop = _service.GetType().GetMethods().Where(m => m.Name == STOP_METHOD).FirstOrDefault();
             if (_stop != null)
-                _stop.Invoke(_worker, null);
+                _stop.Invoke(_service, null);
         }
 
-        public bool LoadWorker(string assemblyName)
+        public bool LoadService(string assemblyName)
         {
             AppDomain cd = AppDomain.CurrentDomain;
             cd.AssemblyResolve += ResolveAlreadyLoadedAssemblies;
@@ -48,7 +48,7 @@ namespace ServiceManager
                 return false;
 
             try {
-                _worker = assembly.CreateInstance(entryPoint.FullName, true);
+                _service = assembly.CreateInstance(entryPoint.FullName, true);
             } catch (Exception ex) {
                 throw new TypeInitializationException(entryPoint.FullName, ex);
             }

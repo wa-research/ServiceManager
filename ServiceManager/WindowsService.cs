@@ -10,30 +10,11 @@ namespace ServiceManager {
     /// <remarks>Original text on http://www.15seconds.com/issue/040624.htm</remarks>
     public class WindowsService : System.ServiceProcess.ServiceBase	
     {
-        /// <summary>
-        /// Watches the application directory for 
-        /// changes, creates, and deletes.
-        /// </summary>
         private FileSystemWatcher serviceWatcher = null;
-        /// <summary>
-        /// Manages loading, starting, stopping, and unloading
-        /// of services that target the <see cref="ServiceBroker"/>
-        /// interface.
-        /// </summary>
         private ServiceRegistry broker = null;
-        /// <summary>
-        /// Keeps a record of the last change time to a directory,
-        /// so change events won't fire too many times.
-        /// </summary>
         DateTime lastChangeTime = DateTime.Now;
-        /// <summary>
-        /// Folder to scan for services
-        /// </summary>
-        private string _servicesBaseFolder;
-        /// <summary>
-        /// Keeps a record of the last file path changed.
-        /// </summary>
         private string lastFilePath = string.Empty;
+        private string _servicesBaseFolder;
 
         public WindowsService() : this(null) { }
 
@@ -104,13 +85,13 @@ namespace ServiceManager {
 
                     srv.OnStart(args);
 
-                    Console.WriteLine("Type 'exit' to end, list to list loaded services.");
-                    string input = Console.In.ReadLine();
+                    Console.WriteLine("Type 'exit' to end, 'list' to list loaded services.");
+                    string input = null;
                     while (input == null || !input.Equals("exit", StringComparison.OrdinalIgnoreCase))
                     {
                         input = Console.In.ReadLine();
                         if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
-                            ListLoadedServices(srv.broker.GetWorkers());
+                            ListLoadedServices(srv.broker.GetServices());
                     }
 
                     srv.OnStop();
@@ -142,13 +123,13 @@ namespace ServiceManager {
                 {
                     case WatcherChangeTypes.Changed:
                     case WatcherChangeTypes.Created:
-                        //_log.DebugFormat("On_Changed event triggered for assembly {0}", e.FullPath);
+                        Log("'Created' event triggered for assembly {0}", e.FullPath);
                         broker.StartService(e.FullPath);
                         lastChangeTime = DateTime.Now;
                         lastFilePath = e.FullPath;
                         break;
                     case WatcherChangeTypes.Deleted:
-                        //_log.DebugFormat("'Deleted' event triggered for assembly {0}", e.FullPath);
+                        Log("'Deleted' event triggered for assembly {0}", e.FullPath);
                         broker.StopService(e.FullPath);
                         break;
                 }
@@ -158,7 +139,7 @@ namespace ServiceManager {
         protected override void OnStart(string[] args) 
         {
             if (this.broker != null) {
-                this.broker.DiscoverAndStartServices(_servicesBaseFolder, "*Service.dll");
+                this.broker.DiscoverServices(_servicesBaseFolder, "*Service.dll");
                 broker.StartServices();
             }
         }
@@ -166,7 +147,7 @@ namespace ServiceManager {
         protected override void OnContinue() 
         {
             if (this.broker != null)
-                this.broker.DiscoverAndStartServices(_servicesBaseFolder, "*Service.dll");
+                this.broker.DiscoverServices(_servicesBaseFolder, "*Service.dll");
         }
  
         protected override void OnStop() 
@@ -178,6 +159,11 @@ namespace ServiceManager {
         protected override void OnPause() 
         {
             this.broker.StopServices();
+        }
+
+        private void Log(string fmt, params object[] arg0)
+        {
+            Console.WriteLine(fmt, arg0);
         }
     }
 }
