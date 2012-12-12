@@ -109,8 +109,6 @@ namespace ServiceManager {
                 Console.WriteLine(si.Path);
         }
 
-
-
         private void File_OnChanged(object source, FileSystemEventArgs e) 
         {
             // Prevent multiple calls from being made on a single change
