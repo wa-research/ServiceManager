@@ -29,9 +29,8 @@ namespace ServiceManager {
                 basePath = AppDomain.CurrentDomain.BaseDirectory;
             }
             _servicesBaseFolder = Path.GetFullPath(basePath);
-            //_log.Debug(string.Format("Watching path: {0} and its subfolders for service assemblies named *Service.dll", _servicesBaseFolder));
             if (!Directory.Exists(_servicesBaseFolder)) {
-                //_log.ErrorFormat("Service base directory {0} does not exist or permissions are not correct. Exiting.", _servicesBaseFolder);
+                Log("Service base directory {0} does not exist or permissions are not correct. Exiting.", _servicesBaseFolder);
                 Stop();
                 return;
             }
@@ -80,12 +79,13 @@ namespace ServiceManager {
                     }
                     WindowsService srv = new WindowsService(watchedFolder);
 
-                    Console.WriteLine("Watching folders rooted at '{0}'", srv._servicesBaseFolder);
-                    Console.WriteLine();
+                    srv.Log("Watching folders rooted at '{0}'", srv._servicesBaseFolder);
 
                     srv.OnStart(args);
 
+                    Console.WriteLine("___________________________________________________");
                     Console.WriteLine("Type 'exit' to end, 'list' to list loaded services.");
+
                     string input = null;
                     while (input == null || !input.Equals("exit", StringComparison.OrdinalIgnoreCase))
                     {
@@ -122,13 +122,21 @@ namespace ServiceManager {
                     case WatcherChangeTypes.Changed:
                     case WatcherChangeTypes.Created:
                         Log("'Created' event triggered for assembly {0}", e.FullPath);
-                        broker.StartService(e.FullPath);
+                        try {
+                            broker.StartService(e.FullPath);
+                        } catch (Exception ex) {
+                            Log("Could not start service {0}: {1}", e.FullPath, ex.ToString());
+                        }
                         lastChangeTime = DateTime.Now;
                         lastFilePath = e.FullPath;
                         break;
                     case WatcherChangeTypes.Deleted:
                         Log("'Deleted' event triggered for assembly {0}", e.FullPath);
-                        broker.StopService(e.FullPath);
+                        try {
+                            broker.StopService(e.FullPath);
+                        } catch (Exception ex) {
+                            Log("Error while stopping service {0}: {1}", e.FullPath, ex.ToString());
+                        }
                         break;
                 }
             }
@@ -161,7 +169,7 @@ namespace ServiceManager {
 
         private void Log(string fmt, params object[] arg0)
         {
-            Console.WriteLine(fmt, arg0);
+            ServiceRegistry.Log(fmt, arg0);
         }
     }
 }

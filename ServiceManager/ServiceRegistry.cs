@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -38,9 +39,12 @@ namespace ServiceManager
 
         public void StartServices()
         {
-            
             foreach (var s in _services.Values) {
-                s.Proxy.Start();
+                try {
+                    s.Proxy.Start();
+                } catch (Exception ex) {
+                    Log("Could not start service {0}: {1}", s.Name, ex.ToString());
+                }
             }
         }
 
@@ -99,7 +103,7 @@ namespace ServiceManager
             try {
                 remoteDomain = CreateRemoteDomain(filePath, asmName);
             } catch (Exception ex) {
-                Console.WriteLine("ERROR: Could not create an AppDomain for '{0}'. ({1})", asmName.FullName, ex.Message);
+                Log("ERROR: Could not create an AppDomain for '{0}'. ({1})", asmName.FullName, ex.Message);
                 return;
             }
             #endregion
@@ -111,9 +115,9 @@ namespace ServiceManager
                 //remoteDomain.Load(Assembly.GetAssembly(typeof(AsyncPipes.NamedPipeStreamClient)).GetName());
 
                 proxy = (ServiceProxy)remoteDomain.CreateInstanceFromAndUnwrap(Assembly.GetAssembly(typeof(ServiceProxy)).Location, typeof(ServiceProxy).FullName);
-                Console.WriteLine("\tProxy loaded into the remote domain");
+                Log("Proxy loaded into the remote domain {0}", remoteDomain.FriendlyName);
             } catch (Exception ex) {
-                Console.WriteLine("\tFailed to load Proxy: {0}", ex.Message);
+                Log("Failed to load Proxy: {0}", ex.Message);
                 UnloadDomain(filePath, remoteDomain);
                 return;
             }
@@ -121,16 +125,16 @@ namespace ServiceManager
             //Load svc into the domain
             try {
                 if (!proxy.LoadService(asmName.FullName)) {
-                    Console.WriteLine("Could not load any services from {0} (Most likely the assembly is missing an entry point)", asmName.FullName);
+                    Log("Could not load any services from {0} (Most likely the assembly is missing an entry point)", asmName.FullName);
                     UnloadDomain(filePath, remoteDomain);
                     return;
                 }
             } catch (Exception ex) {
-                Console.WriteLine(ex.Message);
+                Log("Error loading service {0}: {1}", asmName.FullName, ex.Message);
                 try {
                     AppDomain.Unload(remoteDomain);
                 } catch (AppDomainUnloadedException ux) {
-                    Console.WriteLine(ux.Message);
+                    Log(ux.Message);
                 }
                 return;
             }
@@ -177,9 +181,13 @@ namespace ServiceManager
             return false;
         }
 
-        private void Log(string p1, params object[] args)
+        public static void Log(string format, params object[] args)
         {
-            Console.WriteLine(p1, args);
+            int thread = System.Threading.Thread.CurrentThread.ManagedThreadId;
+            int process = Process.GetCurrentProcess().Id;
+
+            string meta = string.Format("{0} [{1}:{2}] ", DateTime.UtcNow.ToString("s"), process, thread);
+            Console.WriteLine(meta + format, args);
         }
 
         private void UnloadService(string id)
