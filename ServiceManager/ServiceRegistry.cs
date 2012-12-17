@@ -68,7 +68,7 @@ namespace ServiceManager
         {
             var service = _services.Values.Where(s => s.Path == fullPath).FirstOrDefault();
             if (service != null) {
-                service.Proxy.Stop();
+                UnloadService(service.ID);
             }
         } 
         #endregion
@@ -172,10 +172,8 @@ namespace ServiceManager
                     return true;
                 } else {
                     // new copy, so stop current and clear out cache
-                    // stop/unload service
                     Log("Unloading old version of service '{0}:{1}'; will load updated binaries.", serviceName, wkid);
                     this.UnloadService(wkid);
-                    dictionary.Remove(wkid);
                 }
             }
             return false;
@@ -205,6 +203,8 @@ namespace ServiceManager
                     AppDomain.Unload(svc.AppDomain);
                 } catch (Exception ex) {
                     Log("Could not unload service {0} [{1}]: {2}", svc.Name, id, ex.Message);
+                } finally {
+                    _services.Remove(id);
                 }
             }
         }
