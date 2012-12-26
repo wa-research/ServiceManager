@@ -50,7 +50,7 @@ namespace ServiceManager
 
         public void StopServices()
         {
-            foreach (var s in _services.Values) {
+            foreach (var s in _services.Values.ToArray()) {
                 StopService(s.Path);
             }
         }
