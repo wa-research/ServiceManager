@@ -7,7 +7,10 @@ namespace ServiceManager {
     /// <summary>
     /// .NET Service Manager Windows Service Class
     /// </summary>
-    /// <remarks>Original text on http://www.15seconds.com/issue/040624.htm</remarks>
+    /// <remarks>
+    /// Inspired by "The Perfect Service" by Ambrose J. Little
+    /// http://aspalliance.com/749_The_Perfect_Service__Part_1
+    /// </remarks>
     public class WindowsService : System.ServiceProcess.ServiceBase	
     {
         private FileSystemWatcher serviceWatcher = null;
