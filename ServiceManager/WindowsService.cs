@@ -56,55 +56,47 @@ namespace ServiceManager {
         /// <summary>
         /// Process entry point.
         /// </summary>
-        static void Main(string[] args) 
+        static void Main(string[] args)
         {
-            string opt = null;
-            if (args.Length > 0)
-            { 
-                opt = args[0];
-                if(opt!=null && opt.ToLower()=="/install")
-                {
-                    WindowsServiceProjectInstaller.Install(args);
-                }
-                else if (opt !=null && opt.ToLower()=="/uninstall")
-                {
-                    WindowsServiceProjectInstaller.Uninstall(args);
-                }
-                else if (opt != null && ("/console".Equals(opt, StringComparison.OrdinalIgnoreCase) || "--console".Equals(opt, StringComparison.OrdinalIgnoreCase)))
-                {
-                    string watchedFolder = null;
-                    if (args.Length > 1) {
-                        watchedFolder = args[1];
+            if (Environment.UserInteractive) {
+                string opt = args.Length > 0 ? args[0] : null;
+                if (opt != null) {
+                    if (opt.ToLower() == "/install") {
+                        WindowsServiceProjectInstaller.Install(args);
+                        Environment.Exit(0);
+                    } else if (opt.ToLower() == "/uninstall") {
+                        WindowsServiceProjectInstaller.Uninstall(args);
+                        Environment.Exit(0);
                     }
-                    if (!Directory.Exists(watchedFolder)) {
-                        Console.WriteLine("Service base folder {0} does not exist.", watchedFolder);
-                        return;
-                    }
-                    WindowsService srv = new WindowsService(watchedFolder);
-
-                    srv.Log("Watching folders rooted at '{0}'", srv._servicesBaseFolder);
-
-                    srv.OnStart(args);
-
-                    Console.WriteLine("___________________________________________________");
-                    Console.WriteLine("Type 'exit' to end, 'list' to list loaded services.");
-
-                    string input = null;
-                    while (input == null || !input.Equals("exit", StringComparison.OrdinalIgnoreCase))
-                    {
-                        input = Console.In.ReadLine();
-                        if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
-                            ListLoadedServices(srv.broker.GetServices());
-                    }
-
-                    srv.OnStop();
                 }
-
-                if(opt==null) Run();
-            }
-            else 
+                RunConsole(args, opt);
+            } else {
                 Run();
+            }
         }
+
+        private static void RunConsole(string[] args, string watchedFolder)
+        {
+            WindowsService srv = new WindowsService(watchedFolder);
+
+            srv.Log("Watching folders rooted at '{0}'", srv._servicesBaseFolder);
+
+            srv.OnStart(args);
+
+            Console.WriteLine("___________________________________________________");
+            Console.WriteLine("Type 'exit' to end, 'list' to list loaded services.");
+
+            string input = null;
+            while (input == null || !input.Equals("exit", StringComparison.OrdinalIgnoreCase)) {
+                input = Console.In.ReadLine();
+                if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
+                    ListLoadedServices(srv.broker.GetServices());
+            }
+
+            srv.OnStop();
+
+            Environment.Exit(0);
+        } 
 
         private static void ListLoadedServices(ServiceInfo[] serviceInfo)
         {
