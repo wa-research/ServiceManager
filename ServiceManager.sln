@@ -1,9 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceManager", "ServiceManager\ServiceManager.csproj", "{073DE88B-78F2-44E2-B2FE-55CB20A4FAE5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceManager.ServiceProxy", "ServiceManager.ServiceProxy\ServiceManager.ServiceProxy.csproj", "{2CA3266A-565C-4968-B8E3-490D9136B57B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simpleton", "Examples\Simpleton\Simpleton.csproj", "{8A293E25-2B88-49C8-8A24-DE7A8986A870}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{1CD65F4F-73D9-48FD-A158-4368D4C9DF09}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AC8DE535-F394-4A3D-B352-904AAF391BB9}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,8 +30,15 @@ Global
 		{2CA3266A-565C-4968-B8E3-490D9136B57B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CA3266A-565C-4968-B8E3-490D9136B57B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CA3266A-565C-4968-B8E3-490D9136B57B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A293E25-2B88-49C8-8A24-DE7A8986A870}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A293E25-2B88-49C8-8A24-DE7A8986A870}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A293E25-2B88-49C8-8A24-DE7A8986A870}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A293E25-2B88-49C8-8A24-DE7A8986A870}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8A293E25-2B88-49C8-8A24-DE7A8986A870} = {1CD65F4F-73D9-48FD-A158-4368D4C9DF09}
 	EndGlobalSection
 EndGlobal

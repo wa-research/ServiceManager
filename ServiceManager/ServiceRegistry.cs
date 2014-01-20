@@ -41,6 +41,7 @@ namespace ServiceManager
         {
             foreach (var s in _services.Values) {
                 try {
+                    Log("Starting {0} ({1})", s.Name, s.Path);
                     s.Proxy.Start();
                 } catch (Exception ex) {
                     Log("Could not start service {0}: {1}", s.Name, ex.ToString());
