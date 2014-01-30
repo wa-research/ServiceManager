@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace ServiceManager
 {
@@ -84,7 +82,7 @@ namespace ServiceManager
 
         private void LoadAssembly(string filePath)
         {
-            string wkid = HashFolderPath(filePath);
+            string wkid = CreateUniqueID(filePath);
 
             if (!File.Exists(filePath))
                 return;
@@ -220,16 +218,14 @@ namespace ServiceManager
         }
 
         #region Create service ID
-        public static string HashFolderPath(string text)
+        /// <summary>
+        /// A normalized full path is a good unique ID
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string CreateUniqueID(string path)
         {
-            var SHA1 = new SHA1CryptoServiceProvider();
-
-            byte[] arrayResult = SHA1.ComputeHash(Encoding.ASCII.GetBytes(text));
-            StringBuilder sb = new StringBuilder(arrayResult.Length * 2);
-            for (int i = 0; i < arrayResult.Length; i++) {
-                sb.Append(arrayResult[i].ToString("X2"));
-            }
-            return sb.ToString().ToLower();
+            return path.ToLower();
         }
         #endregion
     }
