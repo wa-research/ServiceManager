@@ -1,12 +1,10 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly: AssemblyTitle("ServiceManager v1.0")]
-[assembly: AssemblyDescription("Email Sender Generic Service Manager v1.0")]
+[assembly: AssemblyTitle("ServiceManager v2.0")]
+[assembly: AssemblyDescription("Service Manager v2")]
 [assembly: AssemblyCompany("WA Research SA")]
-[assembly: AssemblyProduct("ServiceManager v1.0")]
-[assembly: AssemblyCopyright("Copyright 2011 WA Research SA")]
+[assembly: AssemblyProduct("Service Manager")]
+[assembly: AssemblyCopyright("(c) Copyright 2011-2014 WA Research SA")]
 [assembly: AssemblyVersion("2.0.0.0")]
-[assembly: AssemblyDelaySign(false)]
-[assembly: AssemblyKeyFile("")]
-[assembly: AssemblyKeyName("")]
+
