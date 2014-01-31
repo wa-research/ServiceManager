@@ -13,8 +13,8 @@ namespace ServiceManager {
     /// </remarks>
     public class WindowsService : System.ServiceProcess.ServiceBase	
     {
-        private FileSystemWatcher serviceWatcher = null;
-        private ServiceRegistry broker = null;
+        private FileSystemWatcher _fileWatcher = null;
+        private ServiceRegistry _registry = null;
         DateTime lastChangeTime = DateTime.Now;
         private string lastFilePath = string.Empty;
         private string _servicesBaseFolder;
@@ -37,15 +37,15 @@ namespace ServiceManager {
                 Stop();
                 return;
             }
-            this.broker = new ServiceRegistry();
-            this.serviceWatcher = new FileSystemWatcher();
-            this.serviceWatcher.Path = _servicesBaseFolder;
-            this.serviceWatcher.IncludeSubdirectories = true;
-            this.serviceWatcher.Filter = "*Service.dll";
-            this.serviceWatcher.Changed += new FileSystemEventHandler(File_OnChanged);
-            this.serviceWatcher.Created += new FileSystemEventHandler(File_OnChanged);
-            this.serviceWatcher.Deleted += new FileSystemEventHandler(File_OnChanged);
-            this.serviceWatcher.EnableRaisingEvents = true;
+            this._registry = new ServiceRegistry();
+            this._fileWatcher = new FileSystemWatcher();
+            this._fileWatcher.Path = _servicesBaseFolder;
+            this._fileWatcher.IncludeSubdirectories = true;
+            this._fileWatcher.Filter = "*Service.dll";
+            this._fileWatcher.Changed += new FileSystemEventHandler(File_OnChanged);
+            this._fileWatcher.Created += new FileSystemEventHandler(File_OnChanged);
+            this._fileWatcher.Deleted += new FileSystemEventHandler(File_OnChanged);
+            this._fileWatcher.EnableRaisingEvents = true;
         }
 
         private static void Run()
@@ -90,7 +90,7 @@ namespace ServiceManager {
             while (input == null || !input.Equals("exit", StringComparison.OrdinalIgnoreCase)) {
                 input = Console.In.ReadLine();
                 if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
-                    ListLoadedServices(srv.broker.GetServices());
+                    ListLoadedServices(srv._registry.GetServices());
             }
 
             srv.OnStop();
@@ -118,7 +118,7 @@ namespace ServiceManager {
                     case WatcherChangeTypes.Created:
                         Log("'Created' event triggered for assembly {0}", e.FullPath);
                         try {
-                            broker.StartService(e.FullPath);
+                            _registry.RestartService(e.FullPath);
                         } catch (Exception ex) {
                             Log("Could not start service {0}: {1}", e.FullPath, ex.ToString());
                         }
@@ -128,7 +128,7 @@ namespace ServiceManager {
                     case WatcherChangeTypes.Deleted:
                         Log("'Deleted' event triggered for assembly {0}", e.FullPath);
                         try {
-                            broker.StopService(e.FullPath);
+                            _registry.StopService(e.FullPath);
                         } catch (Exception ex) {
                             Log("Error while stopping service {0}: {1}", e.FullPath, ex.ToString());
                         }
@@ -139,27 +139,31 @@ namespace ServiceManager {
 
         protected override void OnStart(string[] args) 
         {
-            if (this.broker != null) {
-                this.broker.DiscoverServices(_servicesBaseFolder, "*Service.dll");
-                broker.StartServices();
+            if (_registry != null) {
+                _registry.DiscoverServices(_servicesBaseFolder, "*Service.dll");
+                _registry.StartServices();
             }
         }
 
         protected override void OnContinue() 
         {
-            if (this.broker != null)
-                this.broker.DiscoverServices(_servicesBaseFolder, "*Service.dll");
+
+            if (_registry != null) {
+                _registry.DiscoverServices(_servicesBaseFolder, "*Service.dll");
+                _registry.StartServices();
+            }
         }
  
         protected override void OnStop() 
         {
-            if (this.broker != null)
-                this.broker.StopServices();
+            if (_registry != null)
+                _registry.StopServices();
         }
 
         protected override void OnPause() 
         {
-            this.broker.StopServices();
+            if (_registry != null)
+                _registry.StopServices();
         }
 
         private void Log(string fmt, params object[] arg0)

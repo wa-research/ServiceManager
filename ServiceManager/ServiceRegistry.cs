@@ -54,7 +54,7 @@ namespace ServiceManager
             }
         }
 
-        public void StartService(string fullPath)
+        public void RestartService(string fullPath)
         {
             LoadAssembly(fullPath);
             var service = _services.Values.Where(s => s.Path == fullPath).FirstOrDefault();
@@ -111,7 +111,7 @@ namespace ServiceManager
             ServiceProxy proxy = null;
             try {
                 //Inject our local copy into assembly so that we don't have to deploy duplicates of shared dependencies to every svc folder
-                //remoteDomain.Load(Assembly.GetAssembly(typeof(AsyncPipes.NamedPipeStreamClient)).GetName());
+                remoteDomain.Load(Assembly.GetAssembly(typeof(ServiceManager.ServiceSupport.Logging.Logger)).GetName());
 
                 proxy = (ServiceProxy)remoteDomain.CreateInstanceFromAndUnwrap(Assembly.GetAssembly(typeof(ServiceProxy)).Location, typeof(ServiceProxy).FullName);
                 Log("Proxy loaded into the remote domain {0}", remoteDomain.FriendlyName);
