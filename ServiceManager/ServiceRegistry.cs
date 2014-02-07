@@ -107,12 +107,20 @@ namespace ServiceManager
             }
             #endregion
 
-            //Inject proxy into appdomain
-            ServiceProxy proxy = null;
+            #region Inject dependencies
             try {
                 //Inject our local copy into assembly so that we don't have to deploy duplicates of shared dependencies to every svc folder
-                remoteDomain.Load(Assembly.GetAssembly(typeof(ServiceManager.ServiceSupport.Logging.Logger)).GetName());
+                //remoteDomain.Load(Assembly.GetAssembly(typeof(ServiceManager.ServiceSupport.Configuration.ConfigurationManager)).GetName());
 
+            } catch (Exception ex) {
+                //TODO Replace with new tracing stuff
+                Log("Could not inject dependency library in the new appdomain: {0}", ex.Message);
+            }
+            #endregion
+
+            #region Inject proxy into appdomain
+            ServiceProxy proxy = null;
+            try {
                 proxy = (ServiceProxy)remoteDomain.CreateInstanceFromAndUnwrap(Assembly.GetAssembly(typeof(ServiceProxy)).Location, typeof(ServiceProxy).FullName);
                 Log("Proxy loaded into the remote domain {0}", remoteDomain.FriendlyName);
             } catch (Exception ex) {
@@ -120,8 +128,9 @@ namespace ServiceManager
                 UnloadDomain(filePath, remoteDomain);
                 return;
             }
+            #endregion
 
-            //Load svc into the domain
+            #region Load service assembly into the domain
             try {
                 if (!proxy.LoadService(asmName.FullName)) {
                     Log("Could not load any services from {0} (Most likely the assembly is missing an entry point)", asmName.FullName);
@@ -137,6 +146,7 @@ namespace ServiceManager
                 }
                 return;
             }
+            #endregion
             _services.Add(wkid, new ServiceInfo { ID = wkid, Path = filePath, LastModified = File.GetLastWriteTime(filePath), Name = proxy.Name, Proxy = proxy, AppDomain = remoteDomain });
         }
 

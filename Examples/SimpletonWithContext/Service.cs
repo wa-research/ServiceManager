@@ -1,16 +1,17 @@
 ﻿using System.Diagnostics;
 using System.Timers;
+using ServiceManager;
 using ServiceManager.ServiceSupport.Logging;
 
-namespace Simpleton
+namespace SimpletonWithContext
 {
     public class Service
     {
         Timer _timer;
         TraceSource _logger;
-        public void StartService()
+        public void StartService(ServiceContext ctx)
         {
-            _logger = Tracing.GetTraceSource("Simpleton");
+            _logger = Tracing.GetTraceSource(ctx.ServiceName);
 
             _logger.TraceInformation("Starting; will write a log line every 15 seconds.");
             _timer = new Timer(15 * 1000);
@@ -26,5 +27,6 @@ namespace Simpleton
                 _timer.Dispose();
             }
         }
+
     }
 }

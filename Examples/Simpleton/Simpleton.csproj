@@ -31,12 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Service.cs" />
@@ -46,6 +40,7 @@
     <ProjectReference Include="..\..\ServiceManager.ServiceSupport\ServiceManager.ServiceSupport.csproj">
       <Project>{dfa227ff-fddc-46a2-a223-0d0d0530b119}</Project>
       <Name>ServiceManager.ServiceSupport</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

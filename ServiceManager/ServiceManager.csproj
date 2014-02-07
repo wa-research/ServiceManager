@@ -162,10 +162,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ServiceManager.ServiceProxy\ServiceManager.ServiceProxy.csproj">
-      <Project>{2ca3266a-565c-4968-b8e3-490d9136b57b}</Project>
-      <Name>ServiceManager.ServiceProxy</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ServiceManager.ServiceSupport\ServiceManager.ServiceSupport.csproj">
       <Project>{dfa227ff-fddc-46a2-a223-0d0d0530b119}</Project>
       <Name>ServiceManager.ServiceSupport</Name>
