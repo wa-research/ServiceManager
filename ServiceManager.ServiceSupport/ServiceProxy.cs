@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using ServiceManager.ServiceSupport.Logging;
 
 namespace ServiceManager
 {
@@ -20,11 +21,15 @@ namespace ServiceManager
             }
 
             if (_start != null) {
+                ServiceContext.SetLogger(Logger.Create(this.Name));
+
+                ServiceContext.Log(Logger.EventNumber.ServiceStarting, "Starting service '{0}'", this.Name);
                 if (_start.GetParameters().Length == 1) {
                     _start.Invoke(_service, new object[] { new ServiceContext { ServiceName = this.Name } });
                 } else {
                     _start.Invoke(_service, null);
                 }
+                ServiceContext.Log(Logger.EventNumber.ServiceStarted, "Started");
             }
         }
 
@@ -58,10 +63,15 @@ namespace ServiceManager
 
         public void Stop() 
         {
+            ServiceContext.Log(Logger.EventNumber.ServiceStopping, "Stopping service '{0}'", this.Name);
             if (_stop == null)
                 _stop = GetStopMethod(_service.GetType());
-            if (_stop != null)
+            if (_stop != null) {
                 _stop.Invoke(_service, null);
+                ServiceContext.Log(Logger.EventNumber.ServiceStopped, "Stopped");
+            } else {
+                ServiceContext.Log(Logger.EventNumber.Warning, "Could not stop service: no method named {0}", STOP_METHOD);
+            }
         }
 
         public bool LoadService(string assemblyName)
