@@ -2,6 +2,38 @@
 
 The folder monitor allows one to create ServiceManager serivices that watch folders and react to file notifications in those folders.
 
+## Implementation
+
+The queue watcher has to implement the HandleFile method and process each file it is handed to:
+
+    public class QueueWatcher : FileWatcherBase
+    {
+        public QueueWatcher(WatcherInfo info) : base(info) { }
+
+        protected override void HandleFile(string path, string name)
+        {
+            bool delete = true;
+            try {
+                // Do work here with the file
+            } catch (Exception ex) {
+                Log.Error("Could not process file '{0}' ({1})", path, ex.Message);
+                MarkAsError(path);
+                delete = false;
+            }
+            if (delete)
+                MarkAsDeleted(path);
+            else
+                MarkAsProcessed(path);
+        }
+    }
+
+
+The override has to call one of Mark* methods:
+
+MarkAsProcessed - the file will be moved to 'Processed' subfolder
+MarkAsError - the file will be moved to 'Error' subfolder
+MarkAsDeleted - the file will be immediately deleted, or be moved to 'Deleted' subfolder if deleteMeansDelete is set to false.
+
 ## Configuration
 
 The service configuration file must contain a section with folder monitor definitions.
@@ -15,7 +47,10 @@ For example, one can watch a temp folder for text files, and then read each file
             <section name="watchers" type="FolderMonitor.FolderMonitorConfigHandler, FolderMonitor" />
         </configSections>
         <watchers>
-            <watcher name="Mail Event Importer" inputFolder="C:\temp" deleteMeansDelete="true" connectionString="Server=(local);Database=Events;Trusted_Connection=Yes;" type="EventImporter.EventQueueWatcher, EventImporterService" filter="*.txt" cleanupInterval="60" />
+            <watcher name="Mail Event Importer" type="EventImporter.EventQueueWatcher, EventImporterService" inputFolder="C:\temp" deleteMeansDelete="true" filter="*.txt" cleanupInterval="60" >
+                <settings>
+                </settings>
+            </watcher>
         </watchers>
     </configuration
 

@@ -55,11 +55,5 @@ namespace FolderMonitor
 
         [XmlAttribute("deleteMeansDelete")]
         public bool DeleteMeansDelete { get; set; }
-
-        public FileWatcherBase CreateWatcher()
-        {
-            Type type = Type.GetType(WatcherType);
-            return (FileWatcherBase)Activator.CreateInstance(type, this);
-        }
     }
 }

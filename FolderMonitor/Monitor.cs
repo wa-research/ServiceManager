@@ -12,15 +12,23 @@ namespace FolderMonitor
 
         public List<FileWatcherBase> ConfiguredWatchers { get { return _watchers; } }
 
+        public FileWatcherBase CreateWatcher(WatcherInfo info)
+        {
+            Type type = Type.GetType(info.WatcherType);
+            return (FileWatcherBase)Activator.CreateInstance(type, info);
+        }
+
         public void Start()
         {
-            foreach (WatcherInfo watcherInfo in (List<WatcherInfo>)ConfigurationManager.GetSection("watchers")) {
+            var configuredWatchers = (List<WatcherInfo>)ConfigurationManager.GetSection("watchers");
+            foreach (WatcherInfo watcherInfo in configuredWatchers) {
                 try {
-                    FileWatcherBase watcher = watcherInfo.CreateWatcher();
+                    FileWatcherBase watcher = CreateWatcher(watcherInfo);
                     watcher.Init();
                     _watchers.Add(watcher);
                 } catch (Exception ex) {
                     _log.Error(string.Format("Could not start watcher {0}", watcherInfo != null ? watcherInfo.Name : "watcherInfo was null"), ex);
+                    Console.WriteLine(string.Format("Could not start watcher {0}: {1} {2}", watcherInfo != null ? watcherInfo.Name : "watcherInfo was null", ex.Message, ex.StackTrace), ex);
                 }
             }
         }
