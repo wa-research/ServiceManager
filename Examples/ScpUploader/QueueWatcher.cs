@@ -21,12 +21,13 @@ namespace ScpUploader
             }
         }
 
-        public void UploadFile(string fullPath, string fileName)
+        public void UploadFile(string fullSourcePath, string fileName)
         {
             var host = ConfigurationManager.AppSettings["Host"];
             var user = ConfigurationManager.AppSettings["User"];
             var port = ConfigurationManager.AppSettings["Port"];
             var pass = ConfigurationManager.AppSettings["Password"];
+            var path = ConfigurationManager.AppSettings["Path"];
             var key = ConfigurationManager.AppSettings["PrivateKey"];
 
             int p = 22;
@@ -48,11 +49,16 @@ namespace ScpUploader
 
             ConnectionInfo ConnNfo = new ConnectionInfo(host, p, user, new AuthenticationMethod[]{ auth } );
 
+            string targetPath = fileName;
+            if (!String.IsNullOrEmpty(path)) {
+                targetPath = Path.Combine(path, targetPath);
+            }
+
             using (var scp = new ScpClient(ConnNfo)) {
                 scp.Connect();
 
                 Log.Info("Connection opened, uploading file.");
-                scp.Upload(new FileInfo(fullPath), fileName);
+                scp.Upload(new FileInfo(fullSourcePath), targetPath);
                 Log.Info("File uploaded, closing connection.");
                 scp.Disconnect();
             }
