@@ -51,7 +51,10 @@ namespace ScpUploader
 
             string targetPath = fileName;
             if (!String.IsNullOrEmpty(path)) {
-                targetPath = Path.Combine(path, targetPath);
+                // To avoid path guessing by .NET, we first combine the path, then force
+                // a homogenous directory separator gy using GetFullPath, and then replace
+                // potential backslashes with linux slashes.
+                targetPath = Path.GetFullPath(Path.Combine(path, targetPath)).Replace('\\', '/');
             }
 
             using (var scp = new ScpClient(ConnNfo)) {
