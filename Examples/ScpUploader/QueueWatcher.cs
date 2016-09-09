@@ -51,9 +51,20 @@ namespace ScpUploader
 
             string targetPath = fileName;
             if (!String.IsNullOrEmpty(path)) {
-                // To avoid path guessing by .NET, we first combine the path, then force
-                // potential backslashes with linux slashes.
-                targetPath = Path.Combine(path, targetPath).Replace('\\', '/');
+                // If the Path config setting specifies the file name,
+                // then ignore the local file name and always upload to the same target
+                if (!String.IsNullOrWhiteSpace(Path.GetFileName(path))) {
+                    targetPath = path;
+                } else {
+                    targetPath = Path.Combine(path, targetPath);
+                    // To avoid path guessing by .NET, we first combine the path, then force
+                    // potential backslashes with linux slashes.
+                    // This will obviously kill any space escaping in the path, so we need to bring those back
+                    bool hadSpaceEscapes = targetPath.Contains("\\ ");
+                    targetPath = targetPath.Replace('\\', '/');
+                    if (hadSpaceEscapes)
+                        targetPath = targetPath.Replace("/ ", "\\ ");
+                }
             }
 
             using (var scp = new ScpClient(ConnNfo)) {
